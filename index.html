@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyGuard | سكاي جارد</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#0f1626; --card:#141b2e; --bd:#1e2a44;
+  --acc:#00d4ff; --acc2:#00ff9d; --dgr:#ff3b5c; --wrn:#ffb800;
+  --txt:#e6f1ff; --dim:#8899bb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden;height:100vh}
+html[lang="en"] body{font-family:'Orbitron',sans-serif}
+.hidden{display:none!important}
+
+/* Login */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at center,#0f1e3a 0%,#05080f 100%);z-index:1000}
+.login-box{background:var(--card);border:1px solid var(--bd);border-radius:20px;
+  padding:48px 40px;width:420px;box-shadow:0 0 80px rgba(0,212,255,.1);text-align:center}
+.login-logo{color:var(--acc);margin-bottom:32px}
+.login-logo h1{font-size:32px;font-weight:900;letter-spacing:4px;margin-top:12px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-logo p{color:var(--dim);font-size:14px;margin-top:8px}
+.login-box input{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;
+  padding:14px 16px;color:var(--txt);font-size:15px;font-family:inherit;outline:none;
+  width:100%;margin-bottom:14px;transition:.2s}
+.login-box input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+.login-btn{background:linear-gradient(90deg,var(--acc),var(--acc2));color:#000;border:none;
+  border-radius:10px;padding:14px;font-size:16px;font-weight:700;font-family:inherit;
+  cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;transition:.2s}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,212,255,.3)}
+.login-hint{margin-top:20px;font-size:12px;color:var(--dim)}
+
+/* App */
+#app{display:none;flex-direction:column;height:100vh}
+#app.on{display:flex}
+.topbar{height:64px;background:var(--bg2);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:12px}
+.logo-txt{font-size:20px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.flight-info{display:flex;align-items:center;gap:10px;background:var(--card);
+  border:1px solid var(--bd);border-radius:10px;padding:8px 18px;font-size:14px;color:var(--dim)}
+.flight-info b{color:var(--acc)}
+.tb-right{display:flex;align-items:center;gap:12px}
+.icon-btn{background:var(--card);border:1px solid var(--bd);color:var(--txt);border-radius:10px;
+  padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;transition:.2s}
+.icon-btn:hover{border-color:var(--acc);color:var(--acc)}
+.clock{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);
+  border-radius:10px;padding:8px 16px;font-family:'Orbitron',monospace;font-size:14px;color:var(--acc2)}
+
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:240px;background:var(--bg2);border-inline-end:1px solid var(--bd);
+  display:flex;flex-direction:column;justify-content:space-between;padding:20px 12px;flex-shrink:0}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav-item{background:transparent;border:none;color:var(--dim);padding:12px 16px;border-radius:10px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;font-family:inherit;font-size:14px;
+  text-align:start;transition:.2s}
+.nav-item:hover{background:var(--card);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,212,255,.15),transparent);
+  color:var(--acc);border-inline-start:3px solid var(--acc)}
+.status-box{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);
+  border:1px solid var(--bd);border-radius:10px;font-size:13px;color:var(--dim)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--acc2);
+  box-shadow:0 0 10px var(--acc2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.content{flex:1;overflow:hidden;position:relative}
+.tab{display:none;width:100%;height:100%;padding:20px}
+.tab.on{display:block}
+.ph{height:100%;background:var(--card);border:1px dashed var(--bd);border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--dim)}
+.ph h2{color:var(--txt);font-size:22px}
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--acc)}
+</style>
+</head>
+<body>
+
+<!-- شاشة الدخول -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">
+      <i data-lucide="shield-check" style="width:64px;height:64px"></i>
+      <h1>SkyGuard</h1>
+      <p data-i18n="sub">نظام مراقبة وتحكم الطيران الذكي</p>
+    </div>
+    <input id="pid" placeholder="رقم الطيار" data-i18n-ph="id" value="PLT-001">
+    <input id="ppass" type="password" placeholder="كلمة المرور" data-i18n-ph="pass" value="skyguard">
+    <button class="login-btn" onclick="login()">
+      <i data-lucide="log-in"></i> <span data-i18n="btn">دخول</span>
+    </button>
+    <p class="login-hint">Demo: PLT-001 / skyguard</p>
+  </div>
+</div>
+
+<!-- التطبيق -->
+<div id="app">
+  <header class="topbar">
+    <div class="tb-left">
+      <i data-lucide="shield-check" style="color:var(--acc)"></i>
+      <span class="logo-txt">SkyGuard</span>
+    </div>
+    <div class="flight-info">
+      <i data-lucide="plane"></i>
+      <b>AA-1024</b> | CAI → LHR
+    </div>
+    <div class="tb-right">
+      <button class="icon-btn" onclick="toggleLang()">
+        <i data-lucide="languages"></i> <span id="langLbl">EN</span>
+      </button>
+      <button class="icon-btn" onclick="toggleSound()">
+        <i data-lucide="volume-2" id="sndIcon"></i>
+      </button>
+      <div class="clock">
+        <i data-lucide="clock"></i> <span id="clock">00:00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="nav-item active" onclick="go('map',this)">
+          <i data-lucide="map"></i> <span data-i18n="map">الخريطة</span>
+        </button>
+        <button class="nav-item" onclick="go('pass',this)">
+          <i data-lucide="users"></i> <span data-i18n="pass">الركاب</span>
+        </button>
+        <button class="nav-item" onclick="go('alerts',this)">
+          <i data-lucide="alert-triangle"></i> <span data-i18n="alerts">الإنذارات</span>
+        </button>
+        <button class="nav-item" onclick="go('log',this)">
+          <i data-lucide="file-text"></i> <span data-i18n="log">السجل</span>
+        </button>
+        <button class="nav-item" onclick="go('settings',this)">
+          <i data-lucide="settings"></i> <span data-i18n="settings">الإعدادات</span>
+        </button>
+      </nav>
+      <div class="status-box">
+        <div class="dot"></div> <span data-i18n="online">النظام يعمل</span>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="tab on" id="t-map">
+        <div class="ph">
+          <i data-lucide="map" style="width:64px;height:64px"></i>
+          <h2 data-i18n="mapT">الخريطة</h2>
+          <p data-i18n="soon2">هتظهر في المرحلة الجاية</p>
+        </div>
+      </section>
+      <section class="tab" id="t-pass">
+        <div class="ph">
+          <i data-lucide="users" style="width:64px;height:64px"></i>
+          <h2 data-i18n="passT">مراقبة الركاب</h2>
+          <p>المرحلة 4</p>
+        </div>
+      </section>
+      <section class="tab" id="t-alerts">
+        <div class="ph">
+          <i data-lucide="alert-triangle" style="width:64px;height:64px"></i>
+          <h2 data-i18n="alertsT">الإنذارات</h2>
+          <p>المرحلة 5</p>
+        </div>
+      </section>
+      <section class="tab" id="t-log">
+        <div class="ph">
+          <i data-lucide="file-text" style="width:64px;height:64px"></i>
+          <h2 data-i18n="logT">السجل</h2>
+          <p>المرحلة 7</p>
+        </div>
+      </section>
+      <section class="tab" id="t-settings">
+        <div class="ph">
+          <i data-lucide="settings" style="width:64px;height:64px"></i>
+          <h2 data-i18n="settingsT">الإعدادات</h2>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ====== الترجمة ====== */
+const TR = {
+  ar:{sub:"نظام مراقبة وتحكم الطيران الذكي",id:"رقم الطيار",pass:"كلمة المرور",btn:"دخول",
+      map:"الخريطة",pass:"الركاب",alerts:"الإنذارات",log:"السجل",settings:"الإعدادات",
+      online:"النظام يعمل",mapT:"الخريطة",soon2:"هتظهر في المرحلة الجاية",
+      passT:"مراقبة الركاب",alertsT:"نظام الإنذارات",logT:"سجل الأحداث",settingsT:"الإعدادات"},
+  en:{sub:"Smart Flight Monitoring & Control System",id:"Pilot ID",pass:"Password",btn:"Login",
+      map:"Map",pass:"Passengers",alerts:"Alerts",log:"Flight Log",settings:"Settings",
+      online:"System Online",mapT:"Map",soon2:"Coming next stage",
+      passT:"Passengers",alertsT:"Alerts",logT:"Event Log",settingsT:"Settings"}
+};
+let lang = localStorage.getItem('sg_lang') || 'ar';
+
+function t(k){return TR[lang][k]||k}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar'?'rtl':'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.getAttribute('data-i18n')));
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.getAttribute('data-i18n-ph')));
+  document.getElementById('langLbl').textContent = lang==='ar'?'EN':'ع';
+  localStorage.setItem('sg_lang',lang);
+}
+function toggleLang(){lang = lang==='ar'?'en':'ar'; applyLang(); beep(600,100)}
+
+/* ====== تسجيل الدخول ====== */
+function login(){
+  const id=document.getElementById('pid').value.trim();
+  const pw=document.getElementById('ppass').value.trim();
+  if(id==='PLT-001'&&pw==='skyguard'){
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').classList.add('on');
+    startClock(); lucide.createIcons(); beep(900,150);
+  } else alert(lang==='ar'?'بيانات خاطئة!':'Invalid credentials!');
+}
+
+/* ====== التبويبات ====== */
+function go(id,btn){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab').forEach(c=>c.classList.remove('on'));
+  document.getElementById('t-'+id).classList.add('on');
+  lucide.createIcons();
+}
+
+/* ====== الساعة ====== */
+function startClock(){
+  setInterval(()=>{
+    const d=new Date();
+    document.getElementById('clock').textContent =
+      String(d.getHours()).padStart(2,'0')+':'+
+      String(d.getMinutes()).padStart(2,'0')+':'+
+      String(d.getSeconds()).padStart(2,'0');
+  },1000);
+}
+
+/* ====== الصوت ====== */
+let sound=true, actx=null;
+function toggleSound(){
+  sound=!sound;
+  document.getElementById('sndIcon').setAttribute('data-lucide', sound?'volume-2':'volume-x');
+  lucide.createIcons();
+}
+function beep(f=800,d=150){
+  if(!sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.frequency.value=f; o.type='sine';
+    o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.08,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d/1000);
+    o.start(); o.stop(actx.currentTime+d/1000);
+  }catch(e){}
+}
+
+/* ====== تشغيل ====== */
+window.addEventListener('DOMContentLoaded',()=>{
+  applyLang(); lucide.createIcons();
+  document.getElementById('ppass').addEventListener('keypress',e=>{if(e.key==='Enter')login()});
+});
+</script>
+</body>
+</html>
