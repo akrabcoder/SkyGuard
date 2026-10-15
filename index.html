@@ -7,6 +7,8 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
 <style>
@@ -18,11 +20,10 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden;height:100vh}
 html[lang="en"] body{font-family:'Orbitron',sans-serif}
-.hidden{display:none!important}
 
 /* Login */
 #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at center,#0f1e3a 0%,#05080f 100%);z-index:1000}
+  background:radial-gradient(circle at center,#0f1e3a 0%,#05080f 100%);z-index:2000}
 .login-box{background:var(--card);border:1px solid var(--bd);border-radius:20px;
   padding:48px 40px;width:420px;box-shadow:0 0 80px rgba(0,212,255,.1);text-align:center}
 .login-logo{color:var(--acc);margin-bottom:32px}
@@ -31,11 +32,11 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
 .login-logo p{color:var(--dim);font-size:14px;margin-top:8px}
 .login-box input{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;
   padding:14px 16px;color:var(--txt);font-size:15px;font-family:inherit;outline:none;
-  width:100%;margin-bottom:14px;transition:.2s}
-.login-box input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+  width:100%;margin-bottom:14px}
+.login-box input:focus{border-color:var(--acc)}
 .login-btn{background:linear-gradient(90deg,var(--acc),var(--acc2));color:#000;border:none;
   border-radius:10px;padding:14px;font-size:16px;font-weight:700;font-family:inherit;
-  cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;transition:.2s}
+  cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
 .login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,212,255,.3)}
 .login-hint{margin-top:20px;font-size:12px;color:var(--dim)}
 
@@ -52,7 +53,7 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
 .flight-info b{color:var(--acc)}
 .tb-right{display:flex;align-items:center;gap:12px}
 .icon-btn{background:var(--card);border:1px solid var(--bd);color:var(--txt);border-radius:10px;
-  padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;transition:.2s}
+  padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:13px}
 .icon-btn:hover{border-color:var(--acc);color:var(--acc)}
 .clock{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);
   border-radius:10px;padding:8px 16px;font-family:'Orbitron',monospace;font-size:14px;color:var(--acc2)}
@@ -62,8 +63,7 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
   display:flex;flex-direction:column;justify-content:space-between;padding:20px 12px;flex-shrink:0}
 .nav{display:flex;flex-direction:column;gap:6px}
 .nav-item{background:transparent;border:none;color:var(--dim);padding:12px 16px;border-radius:10px;
-  display:flex;align-items:center;gap:12px;cursor:pointer;font-family:inherit;font-size:14px;
-  text-align:start;transition:.2s}
+  display:flex;align-items:center;gap:12px;cursor:pointer;font-family:inherit;font-size:14px;text-align:start}
 .nav-item:hover{background:var(--card);color:var(--txt)}
 .nav-item.active{background:linear-gradient(90deg,rgba(0,212,255,.15),transparent);
   color:var(--acc);border-inline-start:3px solid var(--acc)}
@@ -74,21 +74,45 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 .content{flex:1;overflow:hidden;position:relative}
-.tab{display:none;width:100%;height:100%;padding:20px}
+.tab{display:none;width:100%;height:100%;position:relative}
 .tab.on{display:block}
-.ph{height:100%;background:var(--card);border:1px dashed var(--bd);border-radius:16px;
+
+#map{width:100%;height:100%}
+
+/* Emergency btn */
+.emg-btn{position:absolute;bottom:30px;inset-inline-start:30px;z-index:1000;
+  background:linear-gradient(90deg,var(--dgr),#ff6b3d);color:#fff;border:none;
+  border-radius:14px;padding:16px 26px;font-size:16px;font-weight:900;font-family:inherit;
+  cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(255,59,92,.5);
+  animation:shake 2s infinite}
+.emg-btn:hover{transform:scale(1.05)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+/* Info panel */
+.info-panel{position:absolute;top:20px;inset-inline-end:20px;z-index:1000;
+  background:rgba(20,27,46,.95);border:1px solid var(--bd);border-radius:14px;
+  padding:16px 20px;min-width:260px;backdrop-filter:blur(10px)}
+.info-row{display:flex;justify-content:space-between;gap:20px;font-size:13px;
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.info-row:last-child{border:none}
+.info-row span:first-child{color:var(--dim)}
+.info-row span:last-child{color:var(--acc);font-weight:700}
+.info-row.alert span:last-child{color:var(--dgr)}
+
+.ph{height:100%;background:var(--card);border:1px dashed var(--bd);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--dim)}
-.ph h2{color:var(--txt);font-size:22px}
+
+/* Plane marker */
+.plane-icon{font-size:28px;filter:drop-shadow(0 0 10px var(--acc));transition:transform .5s linear}
 
 ::-webkit-scrollbar{width:8px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:10px}
-::-webkit-scrollbar-thumb:hover{background:var(--acc)}
 </style>
 </head>
 <body>
 
-<!-- شاشة الدخول -->
+<!-- Login -->
 <div id="login">
   <div class="login-box">
     <div class="login-logo">
@@ -96,8 +120,8 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
       <h1>SkyGuard</h1>
       <p data-i18n="sub">نظام مراقبة وتحكم الطيران الذكي</p>
     </div>
-    <input id="pid" placeholder="رقم الطيار" data-i18n-ph="id" value="PLT-001">
-    <input id="ppass" type="password" placeholder="كلمة المرور" data-i18n-ph="pass" value="skyguard">
+    <input id="pid" placeholder="رقم الطيار" value="PLT-001">
+    <input id="ppass" type="password" placeholder="كلمة المرور" value="skyguard">
     <button class="login-btn" onclick="login()">
       <i data-lucide="log-in"></i> <span data-i18n="btn">دخول</span>
     </button>
@@ -105,7 +129,7 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
   </div>
 </div>
 
-<!-- التطبيق -->
+<!-- App -->
 <div id="app">
   <header class="topbar">
     <div class="tb-left">
@@ -114,7 +138,7 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
     </div>
     <div class="flight-info">
       <i data-lucide="plane"></i>
-      <b>AA-1024</b> | CAI → LHR
+      <b>AA-1024</b> | <span id="routeTxt">CAI → LHR</span>
     </div>
     <div class="tb-right">
       <button class="icon-btn" onclick="toggleLang()">
@@ -144,9 +168,6 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
         <button class="nav-item" onclick="go('log',this)">
           <i data-lucide="file-text"></i> <span data-i18n="log">السجل</span>
         </button>
-        <button class="nav-item" onclick="go('settings',this)">
-          <i data-lucide="settings"></i> <span data-i18n="settings">الإعدادات</span>
-        </button>
       </nav>
       <div class="status-box">
         <div class="dot"></div> <span data-i18n="online">النظام يعمل</span>
@@ -155,123 +176,230 @@ html[lang="en"] body{font-family:'Orbitron',sans-serif}
 
     <main class="content">
       <section class="tab on" id="t-map">
-        <div class="ph">
-          <i data-lucide="map" style="width:64px;height:64px"></i>
-          <h2 data-i18n="mapT">الخريطة</h2>
-          <p data-i18n="soon2">هتظهر في المرحلة الجاية</p>
+        <div id="map"></div>
+
+        <!-- لوحة المعلومات -->
+        <div class="info-panel" id="infoPanel">
+          <div class="info-row"><span data-i18n="from">من</span><span>Cairo (CAI)</span></div>
+          <div class="info-row"><span data-i18n="to">إلى</span><span id="toTxt">London (LHR)</span></div>
+          <div class="info-row"><span data-i18n="speed">السرعة</span><span id="spdTxt">850 km/h</span></div>
+          <div class="info-row"><span data-i18n="alt">الارتفاع</span><span id="altTxt">11,000 m</span></div>
+          <div class="info-row"><span data-i18n="eta">الوصول المتوقع</span><span id="etaTxt">--</span></div>
         </div>
+
+        <!-- زر الطوارئ -->
+        <button class="emg-btn" onclick="emergency()">
+          <i data-lucide="alert-octagon"></i>
+          <span data-i18n="emg">طوارئ — Emergency</span>
+        </button>
       </section>
+
       <section class="tab" id="t-pass">
-        <div class="ph">
-          <i data-lucide="users" style="width:64px;height:64px"></i>
-          <h2 data-i18n="passT">مراقبة الركاب</h2>
-          <p>المرحلة 4</p>
-        </div>
+        <div class="ph"><i data-lucide="users" style="width:64px;height:64px"></i>
+        <h2 data-i18n="passT">مراقبة الركاب</h2><p data-i18n="soon">قريباً</p></div>
       </section>
       <section class="tab" id="t-alerts">
-        <div class="ph">
-          <i data-lucide="alert-triangle" style="width:64px;height:64px"></i>
-          <h2 data-i18n="alertsT">الإنذارات</h2>
-          <p>المرحلة 5</p>
-        </div>
+        <div class="ph"><i data-lucide="alert-triangle" style="width:64px;height:64px"></i>
+        <h2 data-i18n="alertsT">الإنذارات</h2><p data-i18n="soon">قريباً</p></div>
       </section>
       <section class="tab" id="t-log">
-        <div class="ph">
-          <i data-lucide="file-text" style="width:64px;height:64px"></i>
-          <h2 data-i18n="logT">السجل</h2>
-          <p>المرحلة 7</p>
-        </div>
-      </section>
-      <section class="tab" id="t-settings">
-        <div class="ph">
-          <i data-lucide="settings" style="width:64px;height:64px"></i>
-          <h2 data-i18n="settingsT">الإعدادات</h2>
-        </div>
+        <div class="ph"><i data-lucide="file-text" style="width:64px;height:64px"></i>
+        <h2 data-i18n="logT">السجل</h2><p data-i18n="soon">قريباً</p></div>
       </section>
     </main>
   </div>
 </div>
 
 <script>
-/* ====== الترجمة ====== */
-const TR = {
-  ar:{sub:"نظام مراقبة وتحكم الطيران الذكي",id:"رقم الطيار",pass:"كلمة المرور",btn:"دخول",
-      map:"الخريطة",pass:"الركاب",alerts:"الإنذارات",log:"السجل",settings:"الإعدادات",
-      online:"النظام يعمل",mapT:"الخريطة",soon2:"هتظهر في المرحلة الجاية",
-      passT:"مراقبة الركاب",alertsT:"نظام الإنذارات",logT:"سجل الأحداث",settingsT:"الإعدادات"},
-  en:{sub:"Smart Flight Monitoring & Control System",id:"Pilot ID",pass:"Password",btn:"Login",
-      map:"Map",pass:"Passengers",alerts:"Alerts",log:"Flight Log",settings:"Settings",
-      online:"System Online",mapT:"Map",soon2:"Coming next stage",
-      passT:"Passengers",alertsT:"Alerts",logT:"Event Log",settingsT:"Settings"}
+/* ===== الترجمة ===== */
+const TR={
+ ar:{sub:"نظام مراقبة وتحكم الطيران الذكي",btn:"دخول",map:"الخريطة",pass:"الركاب",
+     alerts:"الإنذارات",log:"السجل",online:"النظام يعمل",from:"من",to:"إلى",
+     speed:"السرعة",alt:"الارتفاع",eta:"الوصول المتوقع",emg:"طوارئ — Emergency",
+     passT:"مراقبة الركاب",alertsT:"الإنذارات",logT:"السجل",soon:"قريباً",
+     nearest:"أقرب مطار",divert:"تحويل المسار إلى"},
+ en:{sub:"Smart Flight Monitoring & Control System",btn:"Login",map:"Map",pass:"Passengers",
+     alerts:"Alerts",log:"Flight Log",online:"System Online",from:"From",to:"To",
+     speed:"Speed",alt:"Altitude",eta:"ETA",emg:"Emergency",
+     passT:"Passengers",alertsT:"Alerts",logT:"Log",soon:"Soon",
+     nearest:"Nearest Airport",divert:"Diverting to"}
 };
-let lang = localStorage.getItem('sg_lang') || 'ar';
-
+let lang=localStorage.getItem('sg_lang')||'ar';
 function t(k){return TR[lang][k]||k}
 function applyLang(){
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang==='ar'?'rtl':'ltr';
+  document.documentElement.lang=lang;
+  document.documentElement.dir=lang==='ar'?'rtl':'ltr';
   document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.getAttribute('data-i18n')));
-  document.querySelectorAll('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.getAttribute('data-i18n-ph')));
-  document.getElementById('langLbl').textContent = lang==='ar'?'EN':'ع';
+  document.getElementById('langLbl').textContent=lang==='ar'?'EN':'ع';
   localStorage.setItem('sg_lang',lang);
 }
-function toggleLang(){lang = lang==='ar'?'en':'ar'; applyLang(); beep(600,100)}
+function toggleLang(){lang=lang==='ar'?'en':'ar';applyLang()}
 
-/* ====== تسجيل الدخول ====== */
+/* ===== Login ===== */
 function login(){
   const id=document.getElementById('pid').value.trim();
   const pw=document.getElementById('ppass').value.trim();
   if(id==='PLT-001'&&pw==='skyguard'){
     document.getElementById('login').style.display='none';
     document.getElementById('app').classList.add('on');
-    startClock(); lucide.createIcons(); beep(900,150);
-  } else alert(lang==='ar'?'بيانات خاطئة!':'Invalid credentials!');
+    setTimeout(()=>{initMap();},100);
+    startClock();
+  } else alert(lang==='ar'?'بيانات خاطئة!':'Invalid!');
 }
 
-/* ====== التبويبات ====== */
-function go(id,btn){
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.tab').forEach(c=>c.classList.remove('on'));
-  document.getElementById('t-'+id).classList.add('on');
-  lucide.createIcons();
-}
-
-/* ====== الساعة ====== */
+/* ===== Clock ===== */
 function startClock(){
   setInterval(()=>{
     const d=new Date();
-    document.getElementById('clock').textContent =
+    document.getElementById('clock').textContent=
       String(d.getHours()).padStart(2,'0')+':'+
       String(d.getMinutes()).padStart(2,'0')+':'+
       String(d.getSeconds()).padStart(2,'0');
   },1000);
 }
 
-/* ====== الصوت ====== */
-let sound=true, actx=null;
+/* ===== Sound ===== */
+let sound=true;
 function toggleSound(){
   sound=!sound;
-  document.getElementById('sndIcon').setAttribute('data-lucide', sound?'volume-2':'volume-x');
+  document.getElementById('sndIcon').setAttribute('data-lucide',sound?'volume-2':'volume-x');
   lucide.createIcons();
 }
-function beep(f=800,d=150){
-  if(!sound) return;
-  try{
-    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const o=actx.createOscillator(), g=actx.createGain();
-    o.frequency.value=f; o.type='sine';
-    o.connect(g); g.connect(actx.destination);
-    g.gain.setValueAtTime(.08,actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d/1000);
-    o.start(); o.stop(actx.currentTime+d/1000);
-  }catch(e){}
+
+/* ===== Tabs ===== */
+function go(id,btn){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab').forEach(c=>c.classList.remove('on'));
+  document.getElementById('t-'+id).classList.add('on');
+  if(id==='map'&&map) setTimeout(()=>map.invalidateSize(),100);
+  lucide.createIcons();
 }
 
-/* ====== تشغيل ====== */
+/* ===== المطارات ===== */
+const AIRPORTS={
+  CAI:{name:"Cairo",lat:30.1114,lng:31.4139},
+  LHR:{name:"London Heathrow",lat:51.4700,lng:-0.4543},
+  ATH:{name:"Athens",lat:37.9364,lng:23.9445},
+  IST:{name:"Istanbul",lat:41.2753,lng:28.7519},
+  CDG:{name:"Paris CDG",lat:49.0097,lng:2.5479},
+  FCO:{name:"Rome",lat:41.8003,lng:12.2389},
+  MAD:{name:"Madrid",lat:40.4719,lng:-3.5626},
+  VIE:{name:"Vienna",lat:48.1103,lng:16.5697}
+};
+
+const START=AIRPORTS.CAI;
+const DEST=AIRPORTS.LHR;
+
+let map, planeMarker, routeLine, planeLat, planeLng, progress=0;
+let emergencyMode=false;
+
+/* ===== الخريطة ===== */
+function initMap(){
+  map=L.map('map',{zoomControl:true,attributionControl:false}).setView([42,15],4);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    maxZoom:19
+  }).addTo(map);
+
+  // مطار الإقلاع
+  L.circleMarker([START.lat,START.lng],{
+    radius:8,color:'#00ff9d',fillColor:'#00ff9d',fillOpacity:1
+  }).addTo(map).bindPopup('🛫 '+START.name+' (CAI)');
+
+  // مطار الوصول
+  L.circleMarker([DEST.lat,DEST.lng],{
+    radius:8,color:'#00d4ff',fillColor:'#00d4ff',fillOpacity:1
+  }).addTo(map).bindPopup('🛬 '+DEST.name+' (LHR)');
+
+  // خط الرحلة
+  routeLine=L.polyline([[START.lat,START.lng],[DEST.lat,DEST.lng]],{
+    color:'#00d4ff',weight:2,dashArray:'8,8',opacity:0.7
+  }).addTo(map);
+
+  // الطيارة
+  const planeIcon=L.divIcon({
+    className:'',
+    html:'<div class="plane-icon">✈️</div>',
+    iconSize:[30,30],iconAnchor:[15,15]
+  });
+
+  planeLat=START.lat; planeLng=START.lng;
+  planeMarker=L.marker([planeLat,planeLng],{icon:planeIcon}).addTo(map);
+
+  // ابدأ الحركة
+  movePlane();
+}
+
+/* ===== حركة الطيارة ===== */
+function movePlane(){
+  setInterval(()=>{
+    if(emergencyMode) return;
+    if(progress>=1) return;
+
+    progress+=0.002;
+    if(progress>1) progress=1;
+
+    planeLat=START.lat+(DEST.lat-START.lat)*progress;
+    planeLng=START.lng+(DEST.lng-START.lng)*progress;
+    planeMarker.setLatLng([planeLat,planeLng]);
+
+    // ETA تقريبي
+    const remainH=Math.max(0,Math.round((1-progress)*5));
+    document.getElementById('etaTxt').textContent=remainH+'h';
+  },200);
+}
+
+/* ===== الطوارئ ===== */
+function emergency(){
+  if(emergencyMode) return;
+  emergencyMode=true;
+
+  // لاقي أقرب مطار
+  let nearest=null, minDist=Infinity;
+  Object.keys(AIRPORTS).forEach(code=>{
+    const a=AIRPORTS[code];
+    const d=Math.hypot(a.lat-planeLat,a.lng-planeLng);
+    if(d<minDist){minDist=d; nearest={code,...a};}
+  });
+
+  // غيّر الخط للطوارئ
+  routeLine.setStyle({color:'#ff3b5c',weight:3,dashArray:'4,4'});
+  routeLine.setLatLngs([[planeLat,planeLng],[nearest.lat,nearest.lng]]);
+
+  // نقطة المطار الأقرب
+  L.circleMarker([nearest.lat,nearest.lng],{
+    radius:10,color:'#ff3b5c',fillColor:'#ff3b5c',fillOpacity:1
+  }).addTo(map).bindPopup('🆘 '+t('nearest')+': '+nearest.name).openPopup();
+
+  // حرّك الطيارة ناحية المطار
+  let p=0;
+  const fromLat=planeLat, fromLng=planeLng;
+  const timer=setInterval(()=>{
+    p+=0.01;
+    if(p>=1){clearInterval(timer);return;}
+    const lat=fromLat+(nearest.lat-fromLat)*p;
+    const lng=fromLng+(nearest.lng-fromLng)*p;
+    planeMarker.setLatLng([lat,lng]);
+  },150);
+
+  // حدّث اللوحة
+  document.getElementById('toTxt').textContent=nearest.name+' ('+nearest.code+')';
+  document.getElementById('routeTxt').textContent='CAI → '+nearest.code;
+  document.getElementById('etaTxt').textContent='~15 min';
+
+  // خلفية حمراء
+  document.body.style.background='#1a0a0f';
+  alert('🚨 '+t('divert')+' '+nearest.name+'!');
+}
+
+/* ===== Start ===== */
 window.addEventListener('DOMContentLoaded',()=>{
-  applyLang(); lucide.createIcons();
-  document.getElementById('ppass').addEventListener('keypress',e=>{if(e.key==='Enter')login()});
+  applyLang();
+  lucide.createIcons();
+  document.getElementById('ppass').addEventListener('keypress',e=>{
+    if(e.key==='Enter') login();
+  });
 });
 </script>
 </body>
